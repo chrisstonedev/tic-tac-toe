@@ -24,13 +24,13 @@ interface BoardProps {
 
 const Board: React.FC<BoardProps> = props => {
   const renderSquare = (i: number): ReactNode => (
-    <Square value={props.squares[i]} onClick={() => props.onClick(i)}/>
+    <Square key={'square' + i} value={props.squares[i]} onClick={() => props.onClick(i)}/>
   );
 
   return (
     <div>
       {Array(3).fill('').map((_, row) => (
-        <div className="board-row">
+        <div className="board-row" key={'row' + row}>
           {Array(3).fill('').map((_, column) => renderSquare(row * 3 + column))}
         </div>
       ))}
@@ -64,12 +64,19 @@ const Game: React.FC = () => {
 
   const current = history[stepNumber];
   const winner = calculateWinner(current.squares);
+  const availableMoves: number[] = [];
+  if (stepNumber > 0) {
+    availableMoves.push(0);
+  }
+  if (stepNumber > 1 && history.length > 2) {
+    availableMoves.push(stepNumber - 1);
+  }
 
-  const moves = history.map((step, move) => {
-    const description = move ? 'Go to move #' + move : 'Go to game start';
+  const moves = availableMoves.map(step => {
+    const description = step ? 'Undo last move' : 'Reset game';
     return (
-      <li key={move}>
-        <button onClick={() => jumpTo(move)}>{description}</button>
+      <li key={step}>
+        <button onClick={() => jumpTo(step)}>{description}</button>
       </li>
     );
   });
@@ -88,7 +95,7 @@ const Game: React.FC = () => {
       </div>
       <div className="game-info">
         <div>{status}</div>
-        <ol>{moves}</ol>
+        <ul>{moves}</ul>
       </div>
     </div>
   );
