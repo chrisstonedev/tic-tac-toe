@@ -117,10 +117,10 @@ const calculateWinner = (squares: SquareValue[]): { winner: SquareValue, winning
     [0, 4, 8],
     [2, 4, 6],
   ];
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c])
-      return {winner: squares[a], winningSquares: [a, b, c]};
+  let crazyTest = lines.filter(line =>
+    squares[line[0]] && squares[line[0]] === squares[line[1]] && squares[line[0]] === squares[line[2]]);
+  if (crazyTest.length > 0) {
+    return {winner: squares[crazyTest[0][0]], winningSquares: [...new Set(crazyTest.flat())]};
   }
   return {winner: null};
 };
