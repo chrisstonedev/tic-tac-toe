@@ -6,25 +6,28 @@ type SquareValue = 'X' | 'O' | null;
 
 interface SquareProps {
   value: SquareValue;
+  isWinner: boolean;
 
   onClick(): void;
 }
 
 const Square: React.FC<SquareProps> = props => (
-  <button className="square" onClick={props.onClick}>
+  <button className={'square' + (props.isWinner ? ' winner' : '')} onClick={props.onClick}>
     {props.value}
   </button>
 );
 
 interface BoardProps {
   squares: SquareValue[];
+  winningSquares: number[];
 
   onClick(i: number): void;
 }
 
 const Board: React.FC<BoardProps> = props => {
   const renderSquare = (i: number): ReactNode => (
-    <Square key={'square' + i} value={props.squares[i]} onClick={() => props.onClick(i)}/>
+    <Square key={'square' + i} value={props.squares[i]} isWinner={props.winningSquares.includes(i)}
+            onClick={() => props.onClick(i)}/>
   );
 
   return (
@@ -47,7 +50,7 @@ const Game: React.FC = () => {
     const newHistory = history.slice(0, stepNumber + 1);
     const current = newHistory[newHistory.length - 1];
     const squares = current.squares.slice();
-    if (calculateWinner(squares) || squares[i]) {
+    if (calculateWinner(squares).winner || squares[i]) {
       return;
     }
     squares[i] = xIsNext ? 'X' : 'O';
@@ -63,7 +66,9 @@ const Game: React.FC = () => {
   };
 
   const current = history[stepNumber];
-  const winner = calculateWinner(current.squares);
+  const calculateResult = calculateWinner(current.squares);
+  const winner = calculateResult.winner;
+  const winningSquares = calculateResult.winningSquares || [];
   const availableMoves: number[] = [];
   if (stepNumber > 0) {
     availableMoves.push(0);
@@ -73,7 +78,7 @@ const Game: React.FC = () => {
   }
 
   const moves = availableMoves.map(step => {
-    const description = step ? 'Undo last move' : 'Reset game';
+    const description = step ? 'Undo last move' : (winner ? 'Play new game' : 'Reset game');
     return (
       <li key={step}>
         <button onClick={() => jumpTo(step)}>{description}</button>
@@ -91,7 +96,7 @@ const Game: React.FC = () => {
   return (
     <div className="game">
       <div className="game-board">
-        <Board squares={current.squares} onClick={(i: number) => handleClick(i)}/>
+        <Board squares={current.squares} winningSquares={winningSquares} onClick={(i: number) => handleClick(i)}/>
       </div>
       <div className="game-info">
         <div>{status}</div>
@@ -101,7 +106,7 @@ const Game: React.FC = () => {
   );
 };
 
-const calculateWinner = (squares: SquareValue[]): SquareValue => {
+const calculateWinner = (squares: SquareValue[]): { winner: SquareValue, winningSquares?: number[] } => {
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -115,9 +120,9 @@ const calculateWinner = (squares: SquareValue[]): SquareValue => {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c])
-      return squares[a];
+      return {winner: squares[a], winningSquares: [a, b, c]};
   }
-  return null;
+  return {winner: null};
 };
 
 ReactDOM.render(
